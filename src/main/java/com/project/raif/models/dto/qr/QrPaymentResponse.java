@@ -1,5 +1,6 @@
 package com.project.raif.models.dto.qr;
 
+import com.project.raif.models.enums.PaymentStatus;
 import lombok.Data;
 import lombok.Getter;
 
@@ -15,7 +16,7 @@ public class QrPaymentResponse {
     private String currency;
     private Long merchantId;
     private String order;
-    private String paymentStatus;
+    private PaymentStatus paymentStatus;
     private String qrId;
     private String spbMerchantId;
     private String transactionDate;

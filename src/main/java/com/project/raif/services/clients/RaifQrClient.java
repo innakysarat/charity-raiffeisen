@@ -4,8 +4,9 @@ import com.project.raif.models.dto.qr.QrApiRequest;
 import com.project.raif.models.dto.qr.QrPaymentResponse;
 import com.project.raif.models.dto.qr.QrResponse;
 import com.project.raif.models.dto.subscription.SubscriptionInfoResponse;
-import com.project.raif.models.dto.subscription.SubscriptionPaymentRequest;
-import com.project.raif.models.dto.subscription.SubscriptionPaymentResponse;
+import com.project.raif.models.dto.subscription.PaymentSubscriptionRequest;
+import com.project.raif.models.dto.subscription.PaymentSubscriptionResponse;
+import com.project.raif.models.dto.subscription.QrSubscriptionRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,25 @@ public class RaifQrClient {
         log.error("Error from raif client returning null");
         return null;
     }
+    public SubscriptionInfoResponse getSubscriptionQr(QrSubscriptionRequest qrRequest) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String url = String.format("%s/sbp/v1/subscriptions", baseUrl);
+
+        try {
+            log.info("Sending qr request to raif: body: {}", qrRequest);
+
+            ResponseEntity<SubscriptionInfoResponse> response = restTemplate.exchange(url, HttpMethod.POST,
+                    new HttpEntity<>(qrRequest, headers), SubscriptionInfoResponse.class);
+
+            return response.getBody();
+        } catch (Exception ex) {
+            log.error("Got exception from raif client while creating subscription QR", ex);
+        }
+        log.error("Error from raif client returning null");
+        return null;
+    }
+
 
     public QrPaymentResponse getPaymentInfo(String qrId) {
         HttpHeaders headers = new HttpHeaders();
@@ -79,7 +99,7 @@ public class RaifQrClient {
         }
     }
 
-    public SubscriptionPaymentResponse submitPayment(String subscriptionId, SubscriptionPaymentRequest request) {
+    public PaymentSubscriptionResponse submitPayment(String subscriptionId, PaymentSubscriptionRequest request) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Authorization", "Bearer " + authConfig.secretKey());
@@ -87,8 +107,8 @@ public class RaifQrClient {
         String url = String.format("%s/sbp/v1/subscriptions/%s/orders", baseUrl, subscriptionId);
 
         try {
-            ResponseEntity<SubscriptionPaymentResponse> response = restTemplate.exchange(url, HttpMethod.POST,
-                    new HttpEntity<>(request, headers), SubscriptionPaymentResponse.class);
+            ResponseEntity<PaymentSubscriptionResponse> response = restTemplate.exchange(url, HttpMethod.POST,
+                    new HttpEntity<>(request, headers), PaymentSubscriptionResponse.class);
 
             return response.getBody();
         } catch (Exception ex) {
@@ -97,15 +117,15 @@ public class RaifQrClient {
         }
     }
 
-    public SubscriptionPaymentResponse checkStatus(String subscriptionId, String order) {
+    public PaymentSubscriptionResponse checkStatus(String subscriptionId, String order) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + authConfig.secretKey());
 
         String url = String.format("%s/sbp/v1/subscriptions/%s/orders/%s", baseUrl, subscriptionId, order);
 
         try {
-            ResponseEntity<SubscriptionPaymentResponse> response = restTemplate.exchange(url, HttpMethod.POST,
-                    new HttpEntity<>(null, headers), SubscriptionPaymentResponse.class);
+            ResponseEntity<PaymentSubscriptionResponse> response = restTemplate.exchange(url, HttpMethod.POST,
+                    new HttpEntity<>(null, headers), PaymentSubscriptionResponse.class);
 
             return response.getBody();
         } catch (Exception ex) {

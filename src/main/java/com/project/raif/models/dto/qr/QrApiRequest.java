@@ -1,6 +1,6 @@
 package com.project.raif.models.dto.qr;
 
-import com.project.raif.models.dto.subscription.Subscription;
+import com.project.raif.models.dto.subscription.SubscriptionDto;
 import com.project.raif.models.enums.CurrencyType;
 import com.project.raif.models.enums.QrType;
 import lombok.*;
@@ -25,5 +25,5 @@ public class QrApiRequest {
     private ZonedDateTime qrExpirationDate;
     private String sbpMerchantId;
     private String redirectUrl;
-    private Subscription subscription;
+    private SubscriptionDto subscription;
 }

@@ -3,6 +3,7 @@ package com.project.raif.controllers;
 import com.project.raif.models.dto.WidgetRequestDto;
 import com.project.raif.models.entity.Widget;
 import com.project.raif.services.WidgetService;
+import io.swagger.annotations.Api;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import java.util.Objects;
 @RequestMapping(value = "/widgets")
 @AllArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000")
+@Api(description = "widgets")
 public class WidgetController {
 
     private final WidgetService widgetService;

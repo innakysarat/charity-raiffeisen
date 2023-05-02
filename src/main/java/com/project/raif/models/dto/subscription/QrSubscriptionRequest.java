@@ -1,13 +1,17 @@
 package com.project.raif.models.dto.subscription;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
+@Builder
 @NoArgsConstructor
-public class Subscription {
+@AllArgsConstructor
+public class QrSubscriptionRequest {
     private String id;
     private String subscriptionPurpose;
+    private String sbpMerchantId;
+    private String redirectUrl;
 }

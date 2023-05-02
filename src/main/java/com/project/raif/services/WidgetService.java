@@ -1,5 +1,7 @@
 package com.project.raif.services;
 
+import com.project.raif.exception.ApiException;
+import com.project.raif.exception.ErrorCode;
 import com.project.raif.models.dto.WidgetRequestDto;
 import com.project.raif.models.entity.Fund;
 import com.project.raif.models.entity.Widget;
@@ -24,7 +26,8 @@ public class WidgetService {
 
     public Long create(WidgetRequestDto widgetRequest, String username) {
         String merchantId = "MA977181";
-        Fund fund = fundRepository.findByLogin(username);
+        Fund fund = fundRepository.findByLogin(username).orElseThrow(() ->
+                new ApiException(ErrorCode.ERROR_NOT_FOUND_FUND, ErrorCode.ERROR_NOT_FOUND_FUND.getMessage()));;
         Widget widget = new Widget(merchantId, widgetRequest.getTemplateId(), widgetRequest.getTemplateProps());
         fund.addWidget(widget);
         widget.assignFund(fund);
@@ -50,7 +53,8 @@ public class WidgetService {
         }
     }
     public List<Long> getMyWidgets(String username) {
-        Fund fund = fundRepository.findByLogin(username);
+        Fund fund = fundRepository.findByLogin(username).orElseThrow(() ->
+                new ApiException(ErrorCode.ERROR_NOT_FOUND_FUND, ErrorCode.ERROR_NOT_FOUND_FUND.getMessage()));;
         return fund.getWidgets().stream().map(
                 Widget::getId
         ).collect(Collectors.toList());

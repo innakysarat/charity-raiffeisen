@@ -1,8 +1,11 @@
 package com.project.raif.services.scheduler;
 
 import com.project.raif.models.dto.qr.QrPaymentResponse;
+import com.project.raif.models.dto.subscription.SubscriptionInfoResponse;
 import com.project.raif.models.entity.Qr;
+import com.project.raif.models.enums.PaymentStatus;
 import com.project.raif.models.enums.QrStatus;
+import com.project.raif.models.enums.SubscriptionStatus;
 import com.project.raif.repositories.QrRepository;
 import com.project.raif.services.clients.RaifQrClient;
 import lombok.AllArgsConstructor;
@@ -23,33 +26,68 @@ public class CheckPaymentStatusService implements CheckPaymentStatus {
 
     @Transactional
     @Override
-    public void checkInfo() {
-        List<Qr> qrList = qrRepository.findAllByQrStatus(QrStatus.NEW.toString());
+    public void checkPaymentInfo() {
+        List<Qr> qrList = qrRepository.findAllByQrStatus(QrStatus.NEW);
         for (Qr qr : qrList) {
             try {
                 ZonedDateTime lt = ZonedDateTime.now();
                 if (lt.compareTo(qr.getQrExpirationDate()) >= 0) {
-                    qr.setQrStatus(QrStatus.EXPIRED.name());
+                    qr.setQrStatus(QrStatus.EXPIRED);
                     qrRepository.save(qr);
                     continue;
                 }
                 QrPaymentResponse response = qrClient.getPaymentInfo(qr.getQrId());
-                String paymentStatus = response.getPaymentStatus();
+                PaymentStatus paymentStatus = response.getPaymentStatus();
                 if (paymentStatus == null) {
                     log.error("No payment info. Can't get payment status");
                     continue;
                 }
                 switch (paymentStatus) {
-                    case "SUCCESS":
-                        qr.setQrStatus(QrStatus.PAID.name());
+                    case SUCCESS -> {
+                        qr.setQrStatus(QrStatus.PAID);
+                        qr.setSubscriptionStatus(SubscriptionStatus.SUBSCRIBED);
                         qrRepository.save(qr);
-                        break;
-                    case "DECLINED":
-                        qr.setQrStatus(QrStatus.CANCELLED.name());
+                    }
+                    case DECLINED -> {
+                        qr.setQrStatus(QrStatus.CANCELLED);
                         qrRepository.save(qr);
-                        break;
-                    default:
-                        break;
+                    }
+                    default -> {
+                    }
+                }
+            } catch (Exception ex) {
+                log.error("Got exception from raif client", ex);
+            }
+        }
+    }
+
+    @Transactional
+    @Override
+    public void checkSubscriptionInfo() {
+        List<Qr> qrsSubscription = qrRepository.findAllBySubscriptionStatus(SubscriptionStatus.INACTIVE);
+        for (Qr qr : qrsSubscription) {
+            try {
+                SubscriptionInfoResponse response = qrClient.getSubscriptionInfo(qr.getSubscriptionId());
+                SubscriptionStatus subscriptionStatus = response.getStatus();
+                if (subscriptionStatus == null) {
+                    log.error("No subscription info. Can't get subscription status");
+                    continue;
+                }
+                switch (subscriptionStatus) {
+                    case INACTIVE -> {
+                        qr.setSubscriptionStatus(SubscriptionStatus.INACTIVE);
+                        qrRepository.save(qr);
+                    }
+                    case SUBSCRIBED -> {
+                        qr.setSubscriptionStatus(SubscriptionStatus.SUBSCRIBED);
+                        qrRepository.save(qr);
+                    }
+                    case UNSUBSCRIBED -> {
+                        qr.setSubscriptionStatus(SubscriptionStatus.UNSUBSCRIBED);
+                        qrRepository.save(qr);
+                    }
+                    default -> {
+                    }
                 }
             } catch (Exception ex) {
                 log.error("Got exception from raif client", ex);

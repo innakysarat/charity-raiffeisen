@@ -1,5 +1,6 @@
 package com.project.raif.models.dto.qr;
 
+import com.project.raif.models.enums.QrStatus;
 import lombok.*;
 
 @Data
@@ -9,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 public class QrResponse {
     public String qrId;
-    public String qrStatus;
+    public QrStatus qrStatus;
     public String payload;
     public String qrUrl;
     public String subscriptionId;

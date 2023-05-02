@@ -1,10 +1,11 @@
 package com.project.raif.controllers;
 
-import com.project.raif.auth.AuthService;
+import com.project.raif.services.AuthService;
 import com.project.raif.auth.Generator;
 import com.project.raif.auth.RefreshRequest;
 import com.project.raif.auth.jwt.JwtRequest;
 import com.project.raif.auth.jwt.JwtResponse;
+import io.swagger.annotations.Api;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -18,6 +19,7 @@ import javax.security.auth.message.AuthException;
 @Controller
 @AllArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000")
+@Api(description = "auth")
 public class AuthController {
     private final AuthService authService;
 

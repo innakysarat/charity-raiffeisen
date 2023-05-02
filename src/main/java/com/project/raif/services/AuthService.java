@@ -1,10 +1,11 @@
-package com.project.raif.auth;
+package com.project.raif.services;
 
+import com.project.raif.auth.PasswordConfig;
+import com.project.raif.auth.RefreshRequest;
 import com.project.raif.auth.jwt.JwtProvider;
 import com.project.raif.auth.jwt.JwtRequest;
 import com.project.raif.auth.jwt.JwtResponse;
 import com.project.raif.models.entity.Fund;
-import com.project.raif.services.FundService;
 import io.jsonwebtoken.Claims;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;

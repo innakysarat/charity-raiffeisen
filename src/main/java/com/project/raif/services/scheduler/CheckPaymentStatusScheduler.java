@@ -10,6 +10,10 @@ public class CheckPaymentStatusScheduler {
 
     @Scheduled(cron = "*/2 * * * * *")
     void checkPayment() {
-        checkPaymentStatus.checkInfo();
+        checkPaymentStatus.checkPaymentInfo();
+    }
+    @Scheduled(cron = "*/5 * * * * *")
+    void checkSubscriptionInfo() {
+        checkPaymentStatus.checkSubscriptionInfo();
     }
 }
