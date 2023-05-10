@@ -1,5 +1,6 @@
 package com.project.raif.models.entity;
 
+import com.project.raif.models.enums.VatType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,6 +23,8 @@ public class Fund {
     private String login;
     private String password;
     private String title;
+    private Boolean isCharity = true;
+    private VatType vatType = VatType.VAT0;
     @OneToMany(mappedBy = "fund", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private final Set<Widget> widgets = new HashSet<>();
     @OneToMany(mappedBy = "fund", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

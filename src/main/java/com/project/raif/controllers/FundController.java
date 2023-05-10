@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -19,7 +18,6 @@ import java.util.Objects;
 @Slf4j
 @RestController
 @RequestMapping(value = "/fund")
-@Controller
 @AllArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000")
 @Api(description = "fund")

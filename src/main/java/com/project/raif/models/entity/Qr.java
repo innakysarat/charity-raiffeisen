@@ -32,6 +32,7 @@ public class Qr {
     private ZonedDateTime qrExpirationDate;
     private String payload;
     private String qrUrl;
+    private String receiptNumber;
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "fund_id")

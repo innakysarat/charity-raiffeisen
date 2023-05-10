@@ -61,7 +61,6 @@ public class QrService {
         }
         Fund fund = fundRepository.findByLogin(fundUsername).orElseThrow(() ->
                 new ApiException(ErrorCode.ERROR_NOT_FOUND_FUND, ErrorCode.ERROR_NOT_FOUND_FUND.getMessage()));
-        ;
         fund.addQr(qrEntity);
         qrEntity.assignFund(fund);
 
@@ -158,6 +157,4 @@ public class QrService {
         cnt.put("lost profit", lostProfit);
         return cnt;
     }
-
-
 }

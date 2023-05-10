@@ -8,7 +8,6 @@ import com.project.raif.auth.jwt.JwtResponse;
 import io.swagger.annotations.Api;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.security.auth.message.AuthException;
@@ -16,7 +15,6 @@ import javax.security.auth.message.AuthException;
 @Slf4j
 @RestController
 @RequestMapping(value = "/auth")
-@Controller
 @AllArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000")
 @Api(description = "auth")
