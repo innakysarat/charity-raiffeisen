@@ -70,7 +70,6 @@ public class QrService {
         } catch (Exception ex) {
             log.error("Got exception while saving qr", ex);
         }
-        // apiResponse.qrId = qrEntity.getId().toString();
         return apiResponse;
     }
 

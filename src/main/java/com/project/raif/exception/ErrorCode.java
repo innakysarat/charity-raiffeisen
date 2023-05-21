@@ -9,7 +9,8 @@ public enum ErrorCode {
     ERROR_NOT_FOUND_QR("ERROR_NOT_FOUND_QR", "По данному id нет QR"),
     ERROR_NOT_FOUND_PAYMENT("ERROR_NOT_FOUND_PAYMENT", "По данному id нет платежа"),
     ERROR_QR_EXPIRED("ERROR_QR_EXPIRED", "Срок жизни QR истёк"),
-    ERROR_NOT_FOUND_FUND("ERROR_NOT_FOUND_FUND", "По данному id фонда не найдено");
+    ERROR_NOT_FOUND_FUND("ERROR_NOT_FOUND_FUND", "По данному id фонда не найдено"),
+    ERROR_NO_ACCESS_TO_RESOURCE("ERROR_NO_ACCESS_TO_RESOURCE", "Нет доступа к ресурсу");
 
     private final String code;
     private final String message;

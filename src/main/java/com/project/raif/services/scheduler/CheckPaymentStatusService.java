@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -45,6 +46,7 @@ public class CheckPaymentStatusService implements CheckPaymentStatus {
                 switch (paymentStatus) {
                     case SUCCESS -> {
                         qr.setQrStatus(QrStatus.PAID);
+                        qr.setQrPaymentDate(LocalDate.now());
                         qr.setSubscriptionStatus(SubscriptionStatus.SUBSCRIBED);
                         qrRepository.save(qr);
                     }

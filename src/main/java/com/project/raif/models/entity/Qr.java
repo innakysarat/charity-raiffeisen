@@ -9,6 +9,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 
 @Entity
@@ -23,7 +24,9 @@ public class Qr {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
+    @Enumerated(EnumType.STRING)
     public QrStatus qrStatus;
+    @Enumerated(EnumType.STRING)
     public SubscriptionStatus subscriptionStatus;
     private String qrId;
     private String subscriptionId;
@@ -33,6 +36,7 @@ public class Qr {
     private String payload;
     private String qrUrl;
     private String receiptNumber;
+    private LocalDate qrPaymentDate;
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "fund_id")

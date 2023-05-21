@@ -24,6 +24,7 @@ public class Fund {
     private String password;
     private String title;
     private Boolean isCharity = true;
+    @Enumerated(EnumType.STRING)
     private VatType vatType = VatType.VAT0;
     @OneToMany(mappedBy = "fund", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private final Set<Widget> widgets = new HashSet<>();
