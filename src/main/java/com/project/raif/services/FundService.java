@@ -15,8 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class FundService {
 
+    // TODO: проверить все типы ошибок (где 400, где 401 и тд)
     static final Map<String, TemporalAdjuster> ADJUSTERS = new HashMap<>();
     private final FundRepository fundRepository;
     private final QrRepository qrRepository;
@@ -44,7 +47,7 @@ public class FundService {
         List<Qr> paidQrs = qrRepository.findAllByQrStatus(QrStatus.PAID);
         List<Qr> notPaidQrs = qrRepository.findAllByQrStatus(QrStatus.CANCELLED);
         // find fund's paid qrs
-        paidQrs.stream().filter(qr -> Objects.equals(qr.getFund().getLogin(), fundUsername))
+        paidQrs = paidQrs.stream().filter(qr -> Objects.equals(qr.getFund().getLogin(), fundUsername))
                 .collect(Collectors.toList());
         // find fund's unique paid qrs
         List<Qr> uniquePaidQrs = new ArrayList<>(paidQrs.stream()
@@ -87,29 +90,110 @@ public class FundService {
         return qrRepository.findByFund(fund);
     }
 
-    public Map<LocalDate, BigDecimal> getProfit(String fundUsername) {
+
+    public List<TreeMap<LocalDate, BigDecimal>> getStatisticsByDateRange(String fundUsername,
+                                                                         String startDate,
+                                                                         String endDate) {
         List<Qr> uniquePaidQrs = preprocessingQrs(fundUsername);
-        return uniquePaidQrs.stream()
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate start = LocalDate.parse(startDate, formatter);
+        LocalDate end = LocalDate.parse(endDate, formatter);
+        List<Qr> qrs = uniquePaidQrs.stream()
+                .filter(qr -> qr.getQrPaymentDate().isAfter(start)
+                        && qr.getQrPaymentDate().isBefore(end)
+                        || qr.getQrPaymentDate().isEqual(start)
+                        || qr.getQrPaymentDate().isEqual(end))
+                .collect(Collectors.toList());
+
+        List<TreeMap<LocalDate, BigDecimal>> data = new ArrayList<>();
+        data.add(new TreeMap<>(getIncome(fundUsername, qrs)));
+        data.add(new TreeMap<>(getAvgCheque(fundUsername, qrs)));
+        Map<LocalDate, BigDecimal> cntTransactions = getCntTransactions(fundUsername, qrs)
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> BigDecimal.valueOf(entry.getValue())));
+        data.add(new TreeMap<>(cntTransactions));
+        return data;
+    }
+
+    public TreeMap<LocalDate, BigDecimal> getIncome(String fundUsername, List<Qr> qrs) {
+        if (qrs == null) {
+            qrs = preprocessingQrs(fundUsername);
+        }
+        return new TreeMap<>(qrs.stream()
                 .collect(Collectors.groupingBy(
                         qr -> qr.getQrPaymentDate()
                                 .with(ADJUSTERS.get("day")),
-                        Collectors.mapping(Qr::getAmount, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
+                        Collectors.mapping(Qr::getAmount, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add)))));
     }
 
-    public Map<LocalDate, BigDecimal> getAvgCheque(String fundUsername) {
-        List<Qr> uniquePaidQrs = preprocessingQrs(fundUsername);
-        return uniquePaidQrs.stream()
+    public TreeMap<LocalDate, BigDecimal> getAvgCheque(String fundUsername, List<Qr> qrs) {
+        if (qrs == null) {
+            qrs = preprocessingQrs(fundUsername);
+        }
+        return new TreeMap<>(qrs.stream()
                 .collect(Collectors.groupingBy(
                         Qr::getQrPaymentDate,
                         Collectors.collectingAndThen(Collectors.averagingDouble(qr -> qr.getAmount().doubleValue()),
-                                BigDecimal::valueOf)));
+                                BigDecimal::valueOf))));
     }
 
-    public Map<LocalDate, Long> getCntTransactions(String fundUsername) {
-        List<Qr> uniquePaidQrs = preprocessingQrs(fundUsername);
-        return uniquePaidQrs.stream()
+    public TreeMap<LocalDate, Long> getCntTransactions(String fundUsername, List<Qr> qrs) {
+        if (qrs == null) {
+            qrs = preprocessingQrs(fundUsername);
+        }
+        return new TreeMap<>(qrs.stream()
                 .collect(Collectors.groupingBy(Qr::getQrPaymentDate,
-                        Collectors.counting()));
+                        Collectors.counting())));
+    }
+
+    public TreeMap<LocalDate, Long> getCntSubscriptions(String fundUsername, List<Qr> qrs) {
+        if (qrs == null) {
+            qrs = preprocessingQrs(fundUsername);
+        }
+        return new TreeMap<>(qrs.stream()
+                .filter(qr -> qr.getSubscriptionId() != null)
+                .collect(Collectors.groupingBy(Qr::getQrPaymentDate,
+                        Collectors.counting())));
+    }
+
+    public TreeMap<LocalDate, BigDecimal> getSubscriptionAvgCheque(String fundUsername, List<Qr> qrs) {
+        if (qrs == null) {
+            qrs = preprocessingQrs(fundUsername);
+        }
+        return new TreeMap<>(qrs.stream()
+                .filter(qr -> qr.getSubscriptionId() != null)
+                .collect(Collectors.groupingBy(
+                        Qr::getQrPaymentDate,
+                        Collectors.collectingAndThen(Collectors.averagingDouble(qr -> qr.getAmount().doubleValue()),
+                                BigDecimal::valueOf))));
+    }
+
+    public Map<String, BigDecimal> getOneDayStatistics(String fundUsername, String dateString) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate localDate = LocalDate.parse(dateString, formatter);
+        List<Qr> uniquePaidQrs = preprocessingQrs(fundUsername);
+
+        Map<String, BigDecimal> statistics = new HashMap<>();
+        // Filter and count total records
+        long totalCount = uniquePaidQrs.stream()
+                .filter(qr -> qr.getQrPaymentDate().equals(localDate))
+                .count();
+        statistics.put("Общее количество платежей за день", BigDecimal.valueOf(totalCount));
+
+        BigDecimal amount = uniquePaidQrs.stream()
+                .filter(qr -> qr.getQrPaymentDate().equals(localDate))
+                .map(Qr::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        statistics.put("Общая сумма платежей за день", amount);
+
+        BigDecimal averageCheque = uniquePaidQrs.stream()
+                .filter(qr -> qr.getQrPaymentDate().equals(localDate))
+                .collect(Collectors.collectingAndThen(Collectors.averagingDouble(qr -> qr.getAmount().doubleValue()),
+                        BigDecimal::valueOf));
+        statistics.put("Средний чек за день", averageCheque.setScale(2, RoundingMode.HALF_UP));
+
+        return statistics;
     }
 
 }

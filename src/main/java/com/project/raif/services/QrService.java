@@ -56,7 +56,11 @@ public class QrService {
         // internal processing and saving
         Qr qrEntity = new Qr(frontRequest.getSbpMerchantId(), frontRequest.getAmount(),
                 apiRequest.getQrExpirationDate(), apiResponse);
-        if (frontRequest.getSubscription() != null && apiResponse.qrStatus == QrStatus.PAID) {
+
+        // if it's a simple qr registration
+        // then apiResponse won't contain subscriptionId field
+        if (frontRequest.getSubscription() != null) {
+            qrEntity.setSubscriptionId(apiResponse.getSubscriptionId());
             qrEntity.setSubscriptionStatus(SubscriptionStatus.INACTIVE);
         }
         Fund fund = fundRepository.findByLogin(fundUsername).orElseThrow(() ->
@@ -111,49 +115,5 @@ public class QrService {
         List<Qr> qrs = qrRepository.findBySubscriptionId(subscriptionId);
         Qr qr = qrs.get(0);
         return qr.getSubscriptionStatus().toString();
-    }
-
-    public Map<String, Long> countTransactions(List<Qr> qrs) {
-        long cntPaid = 0L;
-        long cntNotPaid = 0L;
-        Map<String, Long> cnt = new HashMap<>();
-        for (Qr qr : qrs) {
-            try {
-                QrStatus qrStatus = qr.getQrStatus();
-                switch (qrStatus) {
-                    case PAID -> cntPaid++;
-                    case CANCELLED, EXPIRED -> cntNotPaid++;
-                    default -> {
-                    }
-                }
-            } catch (Exception ex) {
-                log.error("Got exception from raif client", ex);
-            }
-        }
-        cnt.put("count paid qrs", cntPaid);
-        cnt.put("count not paid qrs", cntNotPaid);
-        return cnt;
-    }
-
-    public Map<String, BigDecimal> getIncomeAndLostProfit(List<Qr> qrs) {
-        BigDecimal income = new BigDecimal(0);
-        BigDecimal lostProfit = new BigDecimal(0);
-        Map<String, BigDecimal> cnt = new HashMap<>();
-        for (Qr qr : qrs) {
-            try {
-                QrStatus qrStatus = qr.getQrStatus();
-                switch (qrStatus) {
-                    case PAID -> income = income.add(qr.getAmount());
-                    case CANCELLED, EXPIRED -> lostProfit = lostProfit.add(qr.getAmount());
-                    default -> {
-                    }
-                }
-            } catch (Exception ex) {
-                log.error("Got exception from raif client", ex);
-            }
-        }
-        cnt.put("income", income);
-        cnt.put("lost profit", lostProfit);
-        return cnt;
     }
 }

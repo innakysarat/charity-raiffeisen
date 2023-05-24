@@ -26,11 +26,11 @@ public class QrController {
 
     @PostMapping("/getQr")
     @ApiOperation(value = "register dynamic qr")
-    public QrResponse getQr(@RequestBody QrFrontRequest qrRequestFromFront) {
+    public QrResponse getQr(@RequestBody QrFrontRequest frontRequest) {
         log.info("Qr request: /qrs/getQr");
 
         String fundUsername = authentication();
-        return qrService.getQr(qrRequestFromFront, fundUsername);
+        return qrService.getQr(frontRequest, fundUsername);
     }
 
     @PostMapping("/getSubscriptionQr")

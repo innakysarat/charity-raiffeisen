@@ -1,5 +1,6 @@
 package com.project.raif.controllers;
 
+import com.project.raif.models.dto.DateRangeDto;
 import com.project.raif.models.entity.Fund;
 import com.project.raif.models.entity.Qr;
 import com.project.raif.services.FundService;
@@ -17,6 +18,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 
 @Slf4j
 @RestController
@@ -44,25 +46,51 @@ public class FundController {
         return fundService.getQrs(fundUsername);
     }
 
-    @GetMapping("/profit")
-    public Map<LocalDate, BigDecimal> getProfit() {
+    @GetMapping("/income")
+    public TreeMap<LocalDate, BigDecimal> getIncome() {
         String fundUsername = authentication();
-        return fundService.getProfit(fundUsername);
+        return fundService.getIncome(fundUsername, null);
 
     }
 
-    @GetMapping("/avg-cheque")
-    public Map<LocalDate, BigDecimal> getAverageCheque() {
+    @GetMapping("/average-cheque")
+    public TreeMap<LocalDate, BigDecimal> getAverageCheque() {
         String fundUsername = authentication();
-        return fundService.getAvgCheque(fundUsername);
+        return fundService.getAvgCheque(fundUsername, null);
 
     }
 
-    @GetMapping("/total-cnt")
-    public Map<LocalDate, Long> getTotalCount() {
+    @GetMapping("/transaction/count")
+    public TreeMap<LocalDate, Long> getTotalCount() {
         String fundUsername = authentication();
-        return fundService.getCntTransactions(fundUsername);
+        return fundService.getCntTransactions(fundUsername, null);
 
+    }
+
+    @GetMapping("/subscription/count")
+    public TreeMap<LocalDate, Long> getSubscriptionTotalCount() {
+        String fundUsername = authentication();
+        return fundService.getCntSubscriptions(fundUsername, null);
+
+    }
+
+    @GetMapping("/subscription/average-cheque")
+    public TreeMap<LocalDate, BigDecimal> getSubscriptionAvgCheque() {
+        String fundUsername = authentication();
+        return fundService.getSubscriptionAvgCheque(fundUsername, null);
+
+    }
+
+    @GetMapping("/statistics/{date}")
+    public Map<String, BigDecimal> getOneDayStatistics(@PathVariable String date) {
+        String fundUsername = authentication();
+        return fundService.getOneDayStatistics(fundUsername, date);
+    }
+
+    @PostMapping("/statistics/date-range")
+    public List<TreeMap<LocalDate, BigDecimal>> getStatisticsByDateRange(@RequestBody DateRangeDto dto) {
+        String fundUsername = authentication();
+        return fundService.getStatisticsByDateRange(fundUsername, dto.getStartDate(), dto.getEndDate());
     }
 
     private String authentication() {

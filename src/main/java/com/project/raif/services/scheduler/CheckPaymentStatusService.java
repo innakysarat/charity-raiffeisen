@@ -47,7 +47,9 @@ public class CheckPaymentStatusService implements CheckPaymentStatus {
                     case SUCCESS -> {
                         qr.setQrStatus(QrStatus.PAID);
                         qr.setQrPaymentDate(LocalDate.now());
-                        qr.setSubscriptionStatus(SubscriptionStatus.SUBSCRIBED);
+                        if (qr.getSubscriptionId() != null) {
+                            qr.setSubscriptionStatus(SubscriptionStatus.SUBSCRIBED);
+                        }
                         qrRepository.save(qr);
                     }
                     case DECLINED -> {
