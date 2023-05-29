@@ -5,12 +5,14 @@ import com.project.raif.auth.RefreshRequest;
 import com.project.raif.auth.jwt.JwtProvider;
 import com.project.raif.auth.jwt.JwtRequest;
 import com.project.raif.auth.jwt.JwtResponse;
+import com.project.raif.exception.ApiException;
+import com.project.raif.exception.ErrorCode;
 import com.project.raif.models.entity.Fund;
 import io.jsonwebtoken.Claims;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import javax.security.auth.message.AuthException;
+import jakarta.security.auth.message.AuthException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,7 +67,7 @@ public class AuthService {
 
                 return new JwtResponse(accessToken, refreshToken);
             } else {
-                throw new IllegalArgumentException("Невалидный пароль.");
+                throw new ApiException(ErrorCode.ERROR_INVALID_PASSWORD, ErrorCode.ERROR_INVALID_PASSWORD.getMessage());
             }
         } catch (NullPointerException ex) {
             return null;

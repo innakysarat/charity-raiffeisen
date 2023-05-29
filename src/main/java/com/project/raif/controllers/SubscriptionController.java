@@ -3,7 +3,8 @@ package com.project.raif.controllers;
 import com.project.raif.models.dto.subscription.SubscriptionInfoResponse;
 import com.project.raif.models.dto.subscription.QrSubscriptionRequest;
 import com.project.raif.services.QrService;
-import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,11 +20,14 @@ import java.util.Objects;
 @RequestMapping(value = "/subscriptions")
 @AllArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000")
-@Api(description = "subscriptions")
 public class SubscriptionController {
     private final QrService qrService;
 
     @PostMapping("/getQr")
+    @Operation(summary = "Генерация QR для подписки на ежемесячные списания")
+    @ApiResponse(responseCode = "200", description = "Метод завершил работу. QR для подписки на ежемесячные списания сгенерирован")
+    @ApiResponse(responseCode = "400", description = "Бизнес-ошибка")
+    @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера")
     public SubscriptionInfoResponse getSubscriptionQr(@RequestBody QrSubscriptionRequest frontRequest) {
         log.info("Get subscription request, sbpMerchantId={}.", frontRequest.getSbpMerchantId());
         Authentication authentication =
@@ -38,6 +42,10 @@ public class SubscriptionController {
         }
     }
     @GetMapping("/info/{subscriptionId}")
+    @Operation(summary = "Получение информации о подписке")
+    @ApiResponse(responseCode = "200", description = "Метод завершил работу. Информация по подписке получена")
+    @ApiResponse(responseCode = "400", description = "Бизнес-ошибка")
+    @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера")
     public String getSubscriptionInfo(@PathVariable String subscriptionId) {
         log.info("Get subscription info request, subscriptionId={}.", subscriptionId);
 

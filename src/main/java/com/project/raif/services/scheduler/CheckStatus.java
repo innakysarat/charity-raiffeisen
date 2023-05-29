@@ -1,6 +1,6 @@
 package com.project.raif.services.scheduler;
 
-public interface CheckPaymentStatus {
+public interface CheckStatus {
     void checkPaymentInfo();
     void checkSubscriptionInfo();
 }

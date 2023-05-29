@@ -6,11 +6,15 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum ErrorCode {
-    ERROR_NOT_FOUND_QR("ERROR_NOT_FOUND_QR", "По данному id нет QR"),
-    ERROR_NOT_FOUND_PAYMENT("ERROR_NOT_FOUND_PAYMENT", "По данному id нет платежа"),
-    ERROR_QR_EXPIRED("ERROR_QR_EXPIRED", "Срок жизни QR истёк"),
-    ERROR_NOT_FOUND_FUND("ERROR_NOT_FOUND_FUND", "По данному id фонда не найдено"),
-    ERROR_NO_ACCESS_TO_RESOURCE("ERROR_NO_ACCESS_TO_RESOURCE", "Нет доступа к ресурсу");
+    ERROR_QR_NOT_FOUND("ERROR.QR_NOT_FOUND", "По данному id нет QR"),
+    ERROR_PAYMENT_NOT_FOUND("ERROR.PAYMENT_NOT_FOUND", "По данному id нет платежа"),
+    ERROR_QR_EXPIRED("ERROR.QR_EXPIRED", "Срок жизни QR истёк"),
+    ERROR_FUND_NOT_FOUND("ERROR.NOT_FOUND_FUND", "По указанным параметрам фонда не найдено"),
+    ERROR_NO_ACCESS_TO_RESOURCE("ERROR.NO_ACCESS_TO_RESOURCE", "Нет доступа к ресурсу"),
+    ERROR_FUND_ALREADY_EXISTS("ERROR.FUND_ALREADY_EXISTS", "Фонд с такими параметрами уже существует"),
+    ERROR_WIDGET_NOT_FOUND("ERROR.WIDGET_NOT_FOUND", "По данному id виджет не найден"),
+    ERROR_INVALID_PASSWORD("ERROR.INVALID_PASSWORD", "Невалидный пароль при входе в приложение")
+    ;
 
     private final String code;
     private final String message;

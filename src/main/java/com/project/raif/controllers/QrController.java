@@ -3,8 +3,8 @@ package com.project.raif.controllers;
 import com.project.raif.models.dto.qr.QrFrontRequest;
 import com.project.raif.models.dto.qr.QrResponse;
 import com.project.raif.services.QrService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,12 +20,14 @@ import java.util.Objects;
 @RequestMapping(value = "/qrs")
 @AllArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000")
-@Api(value = "qrs")
 public class QrController {
     private final QrService qrService;
 
     @PostMapping("/getQr")
-    @ApiOperation(value = "register dynamic qr")
+    @Operation(summary = "Генерация QR для разового платежа")
+    @ApiResponse(responseCode = "200", description = "Метод завершил работу. QR для разового платежа был создан")
+    @ApiResponse(responseCode = "400", description = "Бизнес-ошибка")
+    @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера")
     public QrResponse getQr(@RequestBody QrFrontRequest frontRequest) {
         log.info("Qr request: /qrs/getQr");
 
@@ -34,6 +36,10 @@ public class QrController {
     }
 
     @PostMapping("/getSubscriptionQr")
+    @Operation(summary = "Генерация QR для платежа с подпиской на ежемесячные списания")
+    @ApiResponse(responseCode = "200", description = "Метод завершил работу. QR для платежа с подпиской был создан")
+    @ApiResponse(responseCode = "400", description = "Бизнес-ошибка")
+    @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера")
     public QrResponse getPaymentSubscriptionQr(@RequestBody QrFrontRequest frontRequest) {
         log.info("Get subscription request, sbpMerchantId={}.", frontRequest.getSbpMerchantId());
 

@@ -4,6 +4,8 @@ import com.project.raif.email.EmailDetails;
 import com.project.raif.models.dto.ReceiptFrontRequest;
 import com.project.raif.services.EmailService;
 import com.project.raif.services.ReceiptService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +29,10 @@ public class EmailController {
 
     // ручка, если на фронте нажата кнопка "отправить" и указана почта
     @PostMapping("/send")
+    @Operation(summary = "Отправка чека о совершении платежа на почту клиента")
+    @ApiResponse(responseCode = "200", description = "Метод завершил работу. Письмо отправлено на почту клиента")
+    @ApiResponse(responseCode = "400", description = "Бизнес-ошибка")
+    @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера")
     public String sendMail(@RequestBody ReceiptFrontRequest request) {
         // фискализация нужна + отправка на авторскую почту
         if (!receiptService.preprocessingQr(request.getQrId())) {
@@ -44,6 +50,10 @@ public class EmailController {
     }
     // ручка, если на фронте нажата кнопка "не отправлять" чек на почту
     @PostMapping("/sendDefault/{qrId}")
+    @Operation(summary = "Отправка чека о совершении платежа на дефолтную почту")
+    @ApiResponse(responseCode = "200", description = "Метод завершил работу. Чек отправлен на дефолтную почту")
+    @ApiResponse(responseCode = "400", description = "Бизнес-ошибка")
+    @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера")
     public String sendMailDefault(@PathVariable String qrId) {
         // фискализация нужна + отправка чека на дефолтную почту
         if (!receiptService.preprocessingQr(qrId)) {
@@ -60,6 +70,10 @@ public class EmailController {
     }
 
     @PostMapping("/sendWithAttachment")
+    @Operation(summary = "Отправка письма с вложениями")
+    @ApiResponse(responseCode = "200", description = "Метод завершил работу. Письмо с вложениями было отправлено")
+    @ApiResponse(responseCode = "400", description = "Бизнес-ошибка")
+    @ApiResponse(responseCode = "500", description = "Внутренняя ошибка сервера")
     public String sendMailWithAttachment(@RequestBody EmailDetails details) {
         return emailService.sendMailWithAttachment(details);
     }

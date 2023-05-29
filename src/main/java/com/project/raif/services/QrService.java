@@ -11,21 +11,17 @@ import com.project.raif.models.dto.subscription.SubscriptionInfoResponse;
 import com.project.raif.models.entity.Fund;
 import com.project.raif.models.entity.Qr;
 import com.project.raif.models.enums.CurrencyType;
-import com.project.raif.models.enums.QrStatus;
 import com.project.raif.models.enums.QrType;
 import com.project.raif.models.enums.SubscriptionStatus;
 import com.project.raif.repositories.FundRepository;
 import com.project.raif.repositories.QrRepository;
-import com.project.raif.services.clients.RaifQrClient;
+import com.project.raif.services.clients.RaifClientService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.ZonedDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -34,7 +30,22 @@ import java.util.UUID;
 public class QrService {
     private final QrRepository qrRepository;
     private final FundRepository fundRepository;
-    private final RaifQrClient qrClient;
+    private final RaifClientService qrClient;
+
+    private void processSavingQr(String fundUsername, Qr qrEntity) {
+
+        Fund fund = fundRepository.findByLogin(fundUsername).orElseThrow(() ->
+                new ApiException(ErrorCode.ERROR_FUND_NOT_FOUND, ErrorCode.ERROR_FUND_NOT_FOUND.getMessage()));
+        fund.addQr(qrEntity);
+        qrEntity.assignFund(fund);
+
+        try {
+            fundRepository.save(fund);
+            qrRepository.save(qrEntity);
+        } catch (Exception ex) {
+            log.error("Got exception while saving qr", ex);
+        }
+    }
 
     public QrResponse getQr(QrFrontRequest frontRequest, String fundUsername) {
         // preprocessing
@@ -63,17 +74,7 @@ public class QrService {
             qrEntity.setSubscriptionId(apiResponse.getSubscriptionId());
             qrEntity.setSubscriptionStatus(SubscriptionStatus.INACTIVE);
         }
-        Fund fund = fundRepository.findByLogin(fundUsername).orElseThrow(() ->
-                new ApiException(ErrorCode.ERROR_NOT_FOUND_FUND, ErrorCode.ERROR_NOT_FOUND_FUND.getMessage()));
-        fund.addQr(qrEntity);
-        qrEntity.assignFund(fund);
-
-        try {
-            fundRepository.save(fund);
-            qrRepository.save(qrEntity);
-        } catch (Exception ex) {
-            log.error("Got exception while saving qr", ex);
-        }
+        processSavingQr(fundUsername, qrEntity);
         return apiResponse;
     }
 
@@ -90,18 +91,8 @@ public class QrService {
 
         // internal processing and saving
         Qr qrEntity = new Qr(frontRequest.getSbpMerchantId(), apiResponse);
+        processSavingQr(fundUsername, qrEntity);
 
-        Fund fund = fundRepository.findByLogin(fundUsername).orElseThrow(() ->
-                new ApiException(ErrorCode.ERROR_NOT_FOUND_FUND, ErrorCode.ERROR_NOT_FOUND_FUND.getMessage()));
-        fund.addQr(qrEntity);
-        qrEntity.assignFund(fund);
-
-        try {
-            fundRepository.save(fund);
-            qrRepository.save(qrEntity);
-        } catch (Exception ex) {
-            log.error("Got exception while saving qr", ex);
-        }
         return apiResponse;
     }
 

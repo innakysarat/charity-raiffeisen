@@ -11,6 +11,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import static org.springframework.http.HttpMethod.OPTIONS;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -22,16 +24,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-//                .cors().and()
                 .csrf().disable()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // sessions are stored in database
                 .and()
-                .authorizeRequests()
-                .antMatchers("/**").permitAll()
-                .anyRequest()
-                .authenticated()
-                .and()
+                .authorizeHttpRequests((requests) -> requests
+                        .requestMatchers(OPTIONS).permitAll() // allow CORS option calls
+                        .requestMatchers("/**").permitAll()
+                        .anyRequest().authenticated())
                 .addFilterAfter(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

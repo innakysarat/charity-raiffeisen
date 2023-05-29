@@ -7,7 +7,7 @@ import com.project.raif.models.enums.QrStatus;
 import com.project.raif.models.enums.SubscriptionStatus;
 import lombok.*;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
@@ -37,6 +37,7 @@ public class Qr {
     private String qrUrl;
     private String receiptNumber;
     private LocalDate qrPaymentDate;
+
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "fund_id")

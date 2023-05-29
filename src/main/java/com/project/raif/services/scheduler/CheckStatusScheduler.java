@@ -4,16 +4,16 @@ import lombok.AllArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 
 @AllArgsConstructor
-public class CheckPaymentStatusScheduler {
+public class CheckStatusScheduler {
 
-    private CheckPaymentStatus checkPaymentStatus;
+    private CheckStatus checkStatus;
 
     @Scheduled(cron = "*/2 * * * * *")
     void checkPayment() {
-        checkPaymentStatus.checkPaymentInfo();
+        checkStatus.checkPaymentInfo();
     }
     @Scheduled(cron = "*/5 * * * * *")
     void checkSubscriptionInfo() {
-        checkPaymentStatus.checkSubscriptionInfo();
+        checkStatus.checkSubscriptionInfo();
     }
 }

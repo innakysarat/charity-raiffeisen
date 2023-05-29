@@ -8,8 +8,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class SchedulerConfig {
     @Bean
-    public CheckPaymentStatusScheduler checkPaymentStatusScheduler(CheckPaymentStatus checkPaymentStatus)
+    public CheckStatusScheduler checkPaymentStatusScheduler(CheckStatus checkStatus)
     {
-        return new CheckPaymentStatusScheduler(checkPaymentStatus);
+        return new CheckStatusScheduler(checkStatus);
     }
 }

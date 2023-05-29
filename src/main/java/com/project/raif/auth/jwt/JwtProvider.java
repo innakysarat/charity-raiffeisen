@@ -30,6 +30,7 @@ public class JwtProvider {
 
     public String generateAccessToken(@NonNull Fund fund) {
         final LocalDateTime now = LocalDateTime.now();
+        // !!! должно быть полчаса
         final Instant accessExpiration = now.plusHours(3).atZone(ZoneId.systemDefault()).toInstant();
         final Date accessExpirationDate = Date.from(accessExpiration);
         return Jwts.builder()

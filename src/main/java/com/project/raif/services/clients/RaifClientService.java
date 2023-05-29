@@ -16,13 +16,13 @@ import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Service
-public class RaifQrClient {
+public class RaifClientService {
     private final static String baseUrl = "https://pay-test.raif.ru/api";
     private final static String fiscalUrl = "https://test.ecom.raiffeisen.ru/api/fiscal/v1/receipts/sell";
     private final RestTemplate restTemplate = new RestTemplate();
     private final AuthConfig authConfig;
 
-    public RaifQrClient(AuthConfig authConfig) {
+    public RaifClientService(AuthConfig authConfig) {
         this.authConfig = authConfig;
     }
 

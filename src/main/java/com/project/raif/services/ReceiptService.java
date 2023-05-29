@@ -8,7 +8,7 @@ import com.project.raif.models.entity.Client;
 import com.project.raif.models.entity.Fund;
 import com.project.raif.models.entity.Qr;
 import com.project.raif.repositories.QrRepository;
-import com.project.raif.services.clients.RaifQrClient;
+import com.project.raif.services.clients.RaifClientService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ import java.util.UUID;
 @Service
 @AllArgsConstructor
 public class ReceiptService {
-    private final RaifQrClient raifClient;
+    private final RaifClientService raifClientService;
     private final QrRepository qrRepository;
 
     public boolean preprocessingQr(String qrId) {
@@ -30,17 +30,23 @@ public class ReceiptService {
         return qr.getFund().getIsCharity();
     }
 
-    public ReceiptResponseDto createAndRegisterReceipt(String email, Qr qr) {
-        Fund fund = qr.getFund();
+    public ReceiptResponseDto createAndRegisterReceipt(String email, String qrId) {
+        List<Qr> qrs = qrRepository.findByQrId(qrId);
+        Fund fund = qrs.get(0).getFund();
+        String receiptNumber = UUID.randomUUID().toString();
         ReceiptRequestDto apiRequest = ReceiptRequestDto.builder()
-                .receiptNumber(UUID.randomUUID().toString())
+                .receiptNumber(receiptNumber)
                 .client(new Client(email))
-                .items(new ArrayList<>(List.of(new Item(fund.getTitle(), qr.getAmount(),
-                        BigDecimal.ONE, qr.getAmount(), fund.getVatType()))))
-                .total(qr.getAmount())
+                .items(new ArrayList<>(List.of(new Item(fund.getTitle(), qrs.get(0).getAmount(),
+                        BigDecimal.ONE, qrs.get(0).getAmount(), fund.getVatType()))))
+                .total(qrs.get(0).getAmount())
                 .build();
-        ReceiptResponseDto response = raifClient.createReceipt(apiRequest);
-        return raifClient.registerReceipt(response.getReceiptNumber());
+        qrs.get(0).setReceiptNumber(receiptNumber);
+        qrs.get(1).setReceiptNumber(receiptNumber);
+        qrRepository.save(qrs.get(0));
+        qrRepository.save(qrs.get(1));
+        ReceiptResponseDto response = raifClientService.createReceipt(apiRequest);
+        return raifClientService.registerReceipt(response.getReceiptNumber());
     }
 
     public EmailDetails createCharityReceipt(String email, String qrId) {

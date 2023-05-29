@@ -9,9 +9,7 @@ import com.project.raif.repositories.FundRepository;
 import com.project.raif.repositories.WidgetRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +25,7 @@ public class WidgetService {
     public Long create(WidgetRequestDto widgetRequest, String username) {
         String merchantId = "MA977181";
         Fund fund = fundRepository.findByLogin(username).orElseThrow(() ->
-                new ApiException(ErrorCode.ERROR_NOT_FOUND_FUND, ErrorCode.ERROR_NOT_FOUND_FUND.getMessage()));;
+                new ApiException(ErrorCode.ERROR_FUND_NOT_FOUND, ErrorCode.ERROR_FUND_NOT_FOUND.getMessage()));
         Widget widget = new Widget(merchantId, widgetRequest.getTemplateId(), widgetRequest.getTemplateProps());
         fund.addWidget(widget);
         widget.assignFund(fund);
@@ -38,8 +36,7 @@ public class WidgetService {
 
     public Widget getWidget(Long widgetId) {
         return widgetRepository.findById(widgetId).orElseThrow(() ->
-                new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Widget with such id is not found"));
+                new ApiException(ErrorCode.ERROR_WIDGET_NOT_FOUND, ErrorCode.ERROR_WIDGET_NOT_FOUND.getMessage()));
     }
 
     public Long delete(Long widgetId) {
@@ -48,15 +45,15 @@ public class WidgetService {
             widgetRepository.deleteById(widgetId);
             return widgetId;
         } else {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Widget with such id is not found");
+            throw new ApiException(ErrorCode.ERROR_WIDGET_NOT_FOUND, ErrorCode.ERROR_WIDGET_NOT_FOUND.getMessage());
         }
     }
+
     public List<Long> getMyWidgets(String username) {
         Fund fund = fundRepository.findByLogin(username).orElseThrow(() ->
-                new ApiException(ErrorCode.ERROR_NOT_FOUND_FUND, ErrorCode.ERROR_NOT_FOUND_FUND.getMessage()));;
-        return fund.getWidgets().stream().map(
-                Widget::getId
-        ).collect(Collectors.toList());
+                new ApiException(ErrorCode.ERROR_FUND_NOT_FOUND, ErrorCode.ERROR_FUND_NOT_FOUND.getMessage()));
+        return fund.getWidgets().stream()
+                .map(Widget::getId)
+                .collect(Collectors.toList());
     }
 }

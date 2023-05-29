@@ -10,9 +10,7 @@ import com.project.raif.repositories.FundRepository;
 import com.project.raif.repositories.QrRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -29,7 +27,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class FundService {
 
-    // TODO: проверить все типы ошибок (где 400, где 401 и тд)
     static final Map<String, TemporalAdjuster> ADJUSTERS = new HashMap<>();
     private final FundRepository fundRepository;
     private final QrRepository qrRepository;
@@ -45,9 +42,9 @@ public class FundService {
     public List<Qr> preprocessingQrs(String fundUsername) {
         // find paid qrs
         List<Qr> paidQrs = qrRepository.findAllByQrStatus(QrStatus.PAID);
-        List<Qr> notPaidQrs = qrRepository.findAllByQrStatus(QrStatus.CANCELLED);
         // find fund's paid qrs
-        paidQrs = paidQrs.stream().filter(qr -> Objects.equals(qr.getFund().getLogin(), fundUsername))
+        paidQrs = paidQrs.stream()
+                .filter(qr -> Objects.equals(qr.getFund().getLogin(), fundUsername))
                 .collect(Collectors.toList());
         // find fund's unique paid qrs
         List<Qr> uniquePaidQrs = new ArrayList<>(paidQrs.stream()
@@ -57,11 +54,30 @@ public class FundService {
         return uniquePaidQrs;
     }
 
+    public List<Qr> preprocessingLostQrs(String fundUsername) {
+        // find lost qrs
+        List<Qr> cancelledQRs = qrRepository.findAllByQrStatus(QrStatus.CANCELLED);
+        List<Qr> expiredQRs = qrRepository.findAllByQrStatus(QrStatus.EXPIRED);
+        List<Qr> lostQrs = new ArrayList<>();
+        lostQrs.addAll(cancelledQRs);
+        lostQrs.addAll(expiredQRs);
+
+        // find fund's lost qrs
+        lostQrs = lostQrs.stream()
+                .filter(qr -> Objects.equals(qr.getFund().getLogin(), fundUsername))
+                .collect(Collectors.toList());
+        // find fund's unique lost qrs
+        List<Qr> uniqueLostQrs = new ArrayList<>(lostQrs.stream()
+                .collect(Collectors.toMap(Qr::getQrId, qr -> qr, (qr1, qr2) -> qr1))
+                .values());
+        trimDate();
+        return uniqueLostQrs;
+    }
+
     public Fund create(Fund fund) {
         Fund fundExists = fundRepository.findByLoginAndTitle(fund.getLogin(), fund.getTitle());
         if (fundExists != null) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Фонд с такими логином и названием уже зарегистрирован");
+            throw new ApiException(ErrorCode.ERROR_FUND_ALREADY_EXISTS, ErrorCode.ERROR_FUND_ALREADY_EXISTS.getMessage());
         }
         String encodedPassword = passwordConfig.passwordEncoder().encode(fund.getPassword());
         fund.setPassword(encodedPassword);
@@ -70,14 +86,14 @@ public class FundService {
 
     public Fund getFund(String login) {
         return fundRepository.findByLogin(login).orElseThrow(() ->
-                new ApiException(ErrorCode.ERROR_NOT_FOUND_FUND, ErrorCode.ERROR_NOT_FOUND_FUND.getMessage()));
+                new ApiException(ErrorCode.ERROR_FUND_NOT_FOUND, ErrorCode.ERROR_FUND_NOT_FOUND.getMessage()));
     }
 
     public void delete(Long fundId, String fundUsername) {
         Fund fund = fundRepository.findById(fundId)
                 .orElseThrow(() ->
-                        new ApiException(ErrorCode.ERROR_NOT_FOUND_FUND,
-                                ErrorCode.ERROR_NOT_FOUND_FUND.getMessage()));
+                        new ApiException(ErrorCode.ERROR_FUND_NOT_FOUND,
+                                ErrorCode.ERROR_FUND_NOT_FOUND.getMessage()));
         if (Objects.equals(fund.getLogin(), fundUsername)) {
             fundRepository.deleteById(fundId);
         } else throw new ApiException(ErrorCode.ERROR_NO_ACCESS_TO_RESOURCE,
@@ -86,7 +102,7 @@ public class FundService {
 
     public List<Qr> getQrs(String fundUsername) {
         Fund fund = fundRepository.findByLogin(fundUsername).orElseThrow(() ->
-                new ApiException(ErrorCode.ERROR_NOT_FOUND_FUND, ErrorCode.ERROR_NOT_FOUND_FUND.getMessage()));
+                new ApiException(ErrorCode.ERROR_FUND_NOT_FOUND, ErrorCode.ERROR_FUND_NOT_FOUND.getMessage()));
         return qrRepository.findByFund(fund);
     }
 
@@ -106,13 +122,29 @@ public class FundService {
                 .collect(Collectors.toList());
 
         List<TreeMap<LocalDate, BigDecimal>> data = new ArrayList<>();
-        data.add(new TreeMap<>(getIncome(fundUsername, qrs)));
-        data.add(new TreeMap<>(getAvgCheque(fundUsername, qrs)));
-        Map<LocalDate, BigDecimal> cntTransactions = getCntTransactions(fundUsername, qrs)
+        data.add(getIncome(fundUsername, qrs));
+        data.add(getAvgCheque(fundUsername, qrs));
+        Map<LocalDate, BigDecimal> transactionCnt = getTransactionCount(fundUsername, qrs)
                 .entrySet()
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> BigDecimal.valueOf(entry.getValue())));
-        data.add(new TreeMap<>(cntTransactions));
+        data.add(new TreeMap<>(transactionCnt));
+
+        Map<LocalDate, BigDecimal> subscriptionCnt = getSubscriptionCount(fundUsername, qrs)
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> BigDecimal.valueOf(entry.getValue())));
+        data.add(new TreeMap<>(subscriptionCnt));
+        data.add(getSubscriptionAvgCheque(fundUsername, qrs));
+
+        List<Qr> lostQrs = preprocessingLostQrs(fundUsername);
+        lostQrs = lostQrs.stream()
+                .filter(qr -> qr.getQrExpirationDate().toLocalDate().isAfter(start)
+                        && qr.getQrExpirationDate().toLocalDate().isBefore(end)
+                        || qr.getQrExpirationDate().toLocalDate().isEqual(start)
+                        || qr.getQrExpirationDate().toLocalDate().isEqual(end))
+                .collect(Collectors.toList());
+        data.add(getLostIncome(fundUsername, lostQrs));
         return data;
     }
 
@@ -121,9 +153,16 @@ public class FundService {
             qrs = preprocessingQrs(fundUsername);
         }
         return new TreeMap<>(qrs.stream()
-                .collect(Collectors.groupingBy(
-                        qr -> qr.getQrPaymentDate()
-                                .with(ADJUSTERS.get("day")),
+                .collect(Collectors.groupingBy(qr -> qr.getQrPaymentDate().with(ADJUSTERS.get("day")),
+                        Collectors.mapping(Qr::getAmount, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add)))));
+    }
+
+    public TreeMap<LocalDate, BigDecimal> getLostIncome(String fundUsername, List<Qr> qrs) {
+        if (qrs == null) {
+            qrs = preprocessingLostQrs(fundUsername);
+        }
+        return new TreeMap<>(qrs.stream()
+                .collect(Collectors.groupingBy(qr -> qr.getQrExpirationDate().toLocalDate().with(ADJUSTERS.get("day")),
                         Collectors.mapping(Qr::getAmount, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add)))));
     }
 
@@ -132,13 +171,11 @@ public class FundService {
             qrs = preprocessingQrs(fundUsername);
         }
         return new TreeMap<>(qrs.stream()
-                .collect(Collectors.groupingBy(
-                        Qr::getQrPaymentDate,
-                        Collectors.collectingAndThen(Collectors.averagingDouble(qr -> qr.getAmount().doubleValue()),
-                                BigDecimal::valueOf))));
+                .collect(Collectors.groupingBy(Qr::getQrPaymentDate,
+                        Collectors.collectingAndThen(Collectors.averagingDouble(qr -> qr.getAmount().doubleValue()), BigDecimal::valueOf))));
     }
 
-    public TreeMap<LocalDate, Long> getCntTransactions(String fundUsername, List<Qr> qrs) {
+    public TreeMap<LocalDate, Long> getTransactionCount(String fundUsername, List<Qr> qrs) {
         if (qrs == null) {
             qrs = preprocessingQrs(fundUsername);
         }
@@ -147,7 +184,7 @@ public class FundService {
                         Collectors.counting())));
     }
 
-    public TreeMap<LocalDate, Long> getCntSubscriptions(String fundUsername, List<Qr> qrs) {
+    public TreeMap<LocalDate, Long> getSubscriptionCount(String fundUsername, List<Qr> qrs) {
         if (qrs == null) {
             qrs = preprocessingQrs(fundUsername);
         }
@@ -165,8 +202,7 @@ public class FundService {
                 .filter(qr -> qr.getSubscriptionId() != null)
                 .collect(Collectors.groupingBy(
                         Qr::getQrPaymentDate,
-                        Collectors.collectingAndThen(Collectors.averagingDouble(qr -> qr.getAmount().doubleValue()),
-                                BigDecimal::valueOf))));
+                        Collectors.collectingAndThen(Collectors.averagingDouble(qr -> qr.getAmount().doubleValue()), BigDecimal::valueOf))));
     }
 
     public Map<String, BigDecimal> getOneDayStatistics(String fundUsername, String dateString) {

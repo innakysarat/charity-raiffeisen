@@ -7,12 +7,12 @@ import com.project.raif.models.enums.PaymentStatus;
 import com.project.raif.models.enums.QrStatus;
 import com.project.raif.models.enums.SubscriptionStatus;
 import com.project.raif.repositories.QrRepository;
-import com.project.raif.services.clients.RaifQrClient;
+import com.project.raif.services.clients.RaifClientService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -20,10 +20,10 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 @Slf4j
-public class CheckPaymentStatusService implements CheckPaymentStatus {
+public class CheckStatusService implements CheckStatus {
 
     private final QrRepository qrRepository;
-    private final RaifQrClient qrClient;
+    private final RaifClientService qrClient;
 
     @Transactional
     @Override

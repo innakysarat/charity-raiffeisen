@@ -1,11 +1,9 @@
 package com.project.raif.services;
 
 import com.project.raif.email.EmailDetails;
-import com.project.raif.models.dto.ReceiptResponseDto;
-import com.project.raif.models.entity.Qr;
-import com.project.raif.repositories.QrRepository;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.SimpleMailMessage;
@@ -13,24 +11,21 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 import java.io.File;
+
 
 @Service
 @AllArgsConstructor
 public class EmailServiceImpl implements EmailService {
+    private final ReceiptService receiptService;
     private JavaMailSender javaMailSender;
     @Value("${spring.mail.username}")
     private String sender;
-    private final QrRepository qrRepository;
-    private final ReceiptService receiptService;
 
     public String sendSimpleMail(EmailDetails details, boolean needReceipt) {
         try {
             if (needReceipt) {
-                Qr qr = qrRepository.findByQrId(details.getQrId()).get(0);
-                receiptService.createAndRegisterReceipt(details.getRecipient(), qr);
+                receiptService.createAndRegisterReceipt(details.getRecipient(), details.getQrId());
             }
             // Creating a simple mail message
             SimpleMailMessage mailMessage = new SimpleMailMessage();
@@ -62,11 +57,12 @@ public class EmailServiceImpl implements EmailService {
 
             // Adding the attachment
             FileSystemResource file = new FileSystemResource(new File(details.getAttachment()));
+            if (file.getFilename() != null) {
+                mimeMessageHelper.addAttachment(file.getFilename(), file);
 
-            mimeMessageHelper.addAttachment(file.getFilename(), file);
-
-            // Sending the mail
-            javaMailSender.send(mimeMessage);
+                // Sending the mail
+                javaMailSender.send(mimeMessage);
+            }
             return "Mail sent Successfully";
         }
 

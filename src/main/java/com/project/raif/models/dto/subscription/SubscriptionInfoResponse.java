@@ -2,7 +2,6 @@ package com.project.raif.models.dto.subscription;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.project.raif.models.enums.SubscriptionStatus;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
 
 import java.util.Map;
@@ -14,7 +13,6 @@ import java.util.Map;
 @Setter
 public class SubscriptionInfoResponse {
 
-    @ApiModelProperty("subscription_id")
     private String id;
     private String bank;
     private String createDate;
