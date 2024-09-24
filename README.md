@@ -1,3 +1,3 @@
-Выпускная квалификационная работа
+Bachelor's Thesis
 
-Клиентская часть лежит по адресу: https://github.com/innakysarat/charity-raiffeisen-frontend
+The client-side can be found at: https://github.com/innakysarat/charity-raiffeisen-frontend
